@@ -1,0 +1,69 @@
+# OpenSearch Scout Driver
+
+OpenSearch driver for Laravel Scout.
+
+## Installation
+
+Install the package with Composer:
+
+```bash
+composer require directorytree/opensearch-scout-driver
+```
+
+Publish the Scout configuration file if your application has not already done so:
+
+```bash
+php artisan vendor:publish --provider="Laravel\Scout\ScoutServiceProvider"
+```
+
+Set Scout to use OpenSearch:
+
+```php
+'driver' => env('SCOUT_DRIVER', 'opensearch'),
+```
+
+Publish the OpenSearch client configuration:
+
+```bash
+php artisan vendor:publish --provider="DirectoryTree\OpenSearchClient\OpenSearchClientServiceProvider"
+```
+
+Publish the OpenSearch Scout configuration:
+
+```bash
+php artisan vendor:publish --provider="DirectoryTree\OpenSearchScoutDriver\OpenSearchScoutServiceProvider"
+```
+
+## Configuration
+
+Configure the OpenSearch client connection in `config/opensearch.client.php`:
+
+```php
+'default' => env('OPENSEARCH_CONNECTION', 'default'),
+
+'connections' => [
+    'default' => [
+        'hosts' => [
+            env('OPENSEARCH_HOST', 'localhost:9200'),
+        ],
+    ],
+],
+```
+
+The Scout driver configuration is published to `config/opensearch.scout.php`:
+
+```php
+'refresh_documents' => env('OPENSEARCH_SCOUT_REFRESH_DOCUMENTS', false),
+```
+
+## Usage
+
+Use Scout as usual:
+
+```php
+use App\Models\Post;
+
+$posts = Post::search('laravel')->get();
+```
+
+The driver converts Scout builders into OpenSearch search requests and uses the configured OpenSearch client connection to index, delete, flush, and search models.
