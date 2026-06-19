@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use UnexpectedValueException;
 
+/**
+ * Creates OpenSearch documents from Scout models.
+ */
 class DocumentFactory implements DocumentFactoryInterface
 {
     /**

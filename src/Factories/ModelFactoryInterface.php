@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 
+/**
+ * Defines a factory for creating Scout model results from OpenSearch responses.
+ */
 interface ModelFactoryInterface
 {
     /**

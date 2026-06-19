@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 
+/**
+ * Creates Scout model results from OpenSearch responses.
+ */
 class ModelFactory implements ModelFactoryInterface
 {
     /**

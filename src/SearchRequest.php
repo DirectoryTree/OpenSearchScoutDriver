@@ -4,6 +4,9 @@ namespace DirectoryTree\OpenSearchScoutDriver;
 
 use DirectoryTree\OpenSearchAdapter\Search\SearchRequest as OpenSearchRequest;
 
+/**
+ * Represents a Scout search request prepared for OpenSearch.
+ */
 class SearchRequest
 {
     /**

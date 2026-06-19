@@ -14,6 +14,9 @@ use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactoryInterface;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Scout\EngineManager;
 
+/**
+ * Registers the OpenSearch Scout driver package.
+ */
 class OpenSearchScoutServiceProvider extends ServiceProvider
 {
     /**

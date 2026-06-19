@@ -7,6 +7,9 @@ use DirectoryTree\OpenSearchScoutDriver\SearchRequest;
 use Laravel\Scout\Builder;
 use stdClass;
 
+/**
+ * Creates OpenSearch search requests from Scout builders.
+ */
 class SearchRequestFactory implements SearchRequestFactoryInterface
 {
     /**

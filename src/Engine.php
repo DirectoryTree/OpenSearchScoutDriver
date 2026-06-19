@@ -19,6 +19,9 @@ use Laravel\Scout\Builder;
 use Laravel\Scout\Engines\Engine as ScoutEngine;
 use stdClass;
 
+/**
+ * Laravel Scout engine backed by OpenSearch.
+ */
 class Engine extends ScoutEngine
 {
     /**

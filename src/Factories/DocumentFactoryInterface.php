@@ -4,6 +4,9 @@ namespace DirectoryTree\OpenSearchScoutDriver\Factories;
 
 use Illuminate\Support\Collection;
 
+/**
+ * Defines a factory for creating OpenSearch documents from Scout models.
+ */
 interface DocumentFactoryInterface
 {
     /**
