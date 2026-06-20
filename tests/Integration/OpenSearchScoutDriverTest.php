@@ -40,6 +40,9 @@ beforeEach(function (): void {
             'email' => [
                 'type' => 'keyword',
             ],
+            '__soft_deleted' => [
+                'type' => 'integer',
+            ],
         ],
     ]);
 });
@@ -69,4 +72,28 @@ it('indexes searches paginates deletes and flushes models against opensearch', f
     $engine->flush(new Client);
 
     expect(Client::search('')->get())->toHaveCount(0);
+});
+
+it('filters stale opensearch hits when database records no longer exist', function (): void {
+    $engine = app(EngineManager::class)->engine('opensearch');
+
+    $engine->update(Client::query()->orderBy('id')->get());
+
+    Client::query()->whereKey(2)->forceDelete();
+
+    expect(Client::search('Jane')->get())->toHaveCount(0);
+});
+
+it('indexes and filters soft deleted models when scout soft deletes are enabled', function (): void {
+    config()->set('scout.soft_delete', true);
+
+    $engine = app(EngineManager::class)->engine('opensearch');
+
+    Client::query()->whereKey(3)->delete();
+
+    $engine->update(Client::withTrashed()->orderBy('id')->get());
+
+    expect(Client::search('')->get()->pluck('id')->sort()->values()->all())->toBe([1, 2])
+        ->and(Client::search('')->withTrashed()->get()->pluck('id')->sort()->values()->all())->toBe([1, 2, 3])
+        ->and(Client::search('')->onlyTrashed()->get()->pluck('id')->sort()->values()->all())->toBe([3]);
 });
