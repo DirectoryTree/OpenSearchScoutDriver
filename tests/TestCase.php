@@ -30,7 +30,7 @@ class TestCase extends Orchestra
         $app['config']->set('opensearch.scout.refresh_documents', true);
         $app['config']->set('opensearch.client.default', 'default');
         $app['config']->set('opensearch.client.connections.default', [
-            'base_uri' => 'http://127.0.0.1:9200',
+            'base_uri' => env('OPENSEARCH_HOST', 'http://127.0.0.1:9200'),
         ]);
     }
 }
