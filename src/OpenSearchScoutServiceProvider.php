@@ -4,7 +4,7 @@ namespace DirectoryTree\OpenSearchScoutDriver;
 
 use DirectoryTree\OpenSearchAdapter\Documents\DocumentManager;
 use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
-use DirectoryTree\OpenSearchClient\ClientBuilderInterface;
+use DirectoryTree\OpenSearchClient\OpenSearchManager;
 use DirectoryTree\OpenSearchScoutDriver\Factories\DocumentFactory;
 use DirectoryTree\OpenSearchScoutDriver\Factories\DocumentFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\ModelFactory;
@@ -31,11 +31,11 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
         $this->app->bindIf(SearchRequestFactoryInterface::class, SearchRequestFactory::class);
 
         $this->app->singletonIf(DocumentManager::class, function ($app) {
-            return new DocumentManager($app->make(ClientBuilderInterface::class)->default());
+            return new DocumentManager($app->make(OpenSearchManager::class)->default());
         });
 
         $this->app->singletonIf(IndexManager::class, function ($app) {
-            return new IndexManager($app->make(ClientBuilderInterface::class)->default());
+            return new IndexManager($app->make(OpenSearchManager::class)->default());
         });
     }
 
