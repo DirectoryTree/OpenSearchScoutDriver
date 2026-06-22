@@ -18,7 +18,7 @@ class DocumentFactory implements DocumentFactoryInterface
      */
     public function makeFromModels(Collection $models): Collection
     {
-        return $models->map(static function (Model $model) {
+        return $models->map(function (Model $model) {
             if (
                 config('scout.soft_delete', false) &&
                 in_array(SoftDeletes::class, class_uses_recursive($model), true)

@@ -63,7 +63,7 @@ class Engine extends ScoutEngine
         }
 
         $index = $models->first()->searchableAs();
-        $documentIds = $models->map(static fn (Model $model) => (string) $model->getScoutKey())->all();
+        $documentIds = $models->map(fn (Model $model) => (string) $model->getScoutKey())->all();
 
         $this->documentManager->delete($index, $documentIds, $this->refreshDocuments);
     }
@@ -96,7 +96,7 @@ class Engine extends ScoutEngine
      */
     public function mapIds($results): BaseCollection
     {
-        return collect($results->hits())->map(static fn (Hit $hit) => $hit->document()->id());
+        return collect($results->hits())->map(fn (Hit $hit) => $hit->document()->id());
     }
 
     /**

@@ -56,7 +56,7 @@ class ModelFactory implements ModelFactoryInterface
     protected function pluckDocumentIds(SearchResponse $searchResponse): array
     {
         return array_map(
-            static fn (Hit $hit) => $hit->document()->id(),
+            fn (Hit $hit) => $hit->document()->id(),
             $searchResponse->hits()
         );
     }
@@ -72,7 +72,7 @@ class ModelFactory implements ModelFactoryInterface
      */
     protected function filterModels($models, array $documentIds)
     {
-        return $models->filter(static fn (Model $model) => in_array((string) $model->getScoutKey(), $documentIds, true))->values();
+        return $models->filter(fn (Model $model) => in_array((string) $model->getScoutKey(), $documentIds, true))->values();
     }
 
     /**
@@ -88,6 +88,6 @@ class ModelFactory implements ModelFactoryInterface
     {
         $documentIdPositions = array_flip($documentIds);
 
-        return $models->sortBy(static fn (Model $model) => $documentIdPositions[(string) $model->getScoutKey()])->values();
+        return $models->sortBy(fn (Model $model) => $documentIdPositions[(string) $model->getScoutKey()])->values();
     }
 }
