@@ -1,6 +1,7 @@
 <?php
 
 use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
+use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
 use DirectoryTree\OpenSearchScoutDriver\Tests\Fixtures\Client;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -26,30 +27,20 @@ beforeEach(function (): void {
     $this->indexManager = app(IndexManager::class);
 
     if ($this->indexManager->exists($this->indexName)) {
-        $this->indexManager->drop($this->indexName);
+        $this->indexManager->delete($this->indexName);
     }
 
     app(EngineManager::class)->engine('opensearch')->createIndex($this->indexName);
 
-    $this->indexManager->putMappingRaw($this->indexName, [
-        'properties' => [
-            'name' => [
-                'type' => 'text',
-                'fielddata' => true,
-            ],
-            'email' => [
-                'type' => 'keyword',
-            ],
-            '__soft_deleted' => [
-                'type' => 'integer',
-            ],
-        ],
-    ]);
+    $this->indexManager->putMapping($this->indexName, (new Mapping)
+        ->text('name', ['fielddata' => true])
+        ->keyword('email')
+        ->integer('__soft_deleted'));
 });
 
 afterEach(function (): void {
     if (isset($this->indexManager, $this->indexName) && $this->indexManager->exists($this->indexName)) {
-        $this->indexManager->drop($this->indexName);
+        $this->indexManager->delete($this->indexName);
     }
 
     Schema::dropIfExists('clients');

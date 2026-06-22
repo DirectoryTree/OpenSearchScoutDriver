@@ -151,6 +151,6 @@ class Engine extends ScoutEngine
      */
     public function deleteIndex($name): void
     {
-        $this->indexManager->drop($name);
+        $this->indexManager->delete($name);
     }
 }

@@ -134,7 +134,7 @@ it('flushes model indexes', function () {
 it('creates and deletes indexes', function () {
     $indexManager = Mockery::mock(IndexManager::class);
     $indexManager->shouldReceive('create')->once()->with(Mockery::type(IndexBlueprint::class));
-    $indexManager->shouldReceive('drop')->once()->with('clients');
+    $indexManager->shouldReceive('delete')->once()->with('clients');
 
     $engine = new Engine(
         Mockery::mock(DocumentManager::class),

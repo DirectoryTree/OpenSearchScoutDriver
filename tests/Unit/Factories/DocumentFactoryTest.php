@@ -16,7 +16,7 @@ it('creates documents from models', function () {
     expect($documents)->toHaveCount(2)
         ->and($documents->first())->toBeInstanceOf(Document::class)
         ->and($documents->first()->id())->toBe('1')
-        ->and($documents->first()->content())->toBe(['name' => 'John', 'email' => 'john@example.com']);
+        ->and($documents->first()->source())->toBe(['name' => 'John', 'email' => 'john@example.com']);
 });
 
 it('rejects restricted document fields', function () {
