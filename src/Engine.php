@@ -35,7 +35,7 @@ class Engine extends ScoutEngine
         protected IndexManager $indexManager,
         protected bool $refreshDocuments = false,
     ) {
-        $this->refreshDocuments = (bool) config('opensearch.scout.refresh_documents', $refreshDocuments);
+        $this->refreshDocuments = (bool) config('opensearch-scout.refresh_documents', $refreshDocuments);
     }
 
     /**

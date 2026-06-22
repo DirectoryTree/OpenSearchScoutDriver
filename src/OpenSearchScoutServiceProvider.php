@@ -24,7 +24,7 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/opensearch.scout.php', 'opensearch.scout');
+        $this->mergeConfigFrom(__DIR__.'/../config/opensearch-scout.php', 'opensearch-scout');
 
         $this->app->bindIf(ModelFactoryInterface::class, ModelFactory::class);
         $this->app->bindIf(DocumentFactoryInterface::class, DocumentFactory::class);
@@ -45,7 +45,7 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../config/opensearch.scout.php' => config_path('opensearch.scout.php'),
+            __DIR__.'/../config/opensearch-scout.php' => config_path('opensearch-scout.php'),
         ]);
 
         $this->app->make(EngineManager::class)->extend('opensearch', function ($app) {

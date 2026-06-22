@@ -36,7 +36,7 @@ php artisan vendor:publish --provider="DirectoryTree\OpenSearchScoutDriver\OpenS
 
 ## Configuration
 
-Configure the OpenSearch client connection in `config/opensearch.client.php`:
+Configure the OpenSearch client connection in `config/opensearch-client.php`:
 
 ```php
 'default' => env('OPENSEARCH_CONNECTION', 'default'),
@@ -50,7 +50,7 @@ Configure the OpenSearch client connection in `config/opensearch.client.php`:
 ],
 ```
 
-The Scout driver configuration is published to `config/opensearch.scout.php`:
+The Scout driver configuration is published to `config/opensearch-scout.php`:
 
 ```php
 'refresh_documents' => env('OPENSEARCH_SCOUT_REFRESH_DOCUMENTS', false),
