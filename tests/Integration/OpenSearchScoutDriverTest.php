@@ -1,6 +1,6 @@
 <?php
 
-use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
+use DirectoryTree\OpenSearchAdapter\Indices\IndexManagerInterface;
 use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
 use DirectoryTree\OpenSearchScoutDriver\Tests\Fixtures\Client;
 use Illuminate\Database\Schema\Blueprint;
@@ -23,24 +23,27 @@ beforeEach(function (): void {
         ['id' => 3, 'name' => 'Taylor Otwell', 'email' => 'taylor@example.com'],
     ]);
 
-    $this->indexName = (new Client)->searchableAs();
-    $this->indexManager = app(IndexManager::class);
+    $index = (new Client)->searchableAs();
+    $indexManager = app(IndexManagerInterface::class);
 
-    if ($this->indexManager->exists($this->indexName)) {
-        $this->indexManager->delete($this->indexName);
+    if ($indexManager->exists($index)) {
+        $indexManager->delete($index);
     }
 
-    app(EngineManager::class)->engine('opensearch')->createIndex($this->indexName);
+    app(EngineManager::class)->engine('opensearch')->createIndex($index);
 
-    $this->indexManager->putMapping($this->indexName, (new Mapping)
+    $indexManager->putMapping($index, (new Mapping)
         ->text('name', ['fielddata' => true])
         ->keyword('email')
         ->integer('__soft_deleted'));
 });
 
 afterEach(function (): void {
-    if (isset($this->indexManager, $this->indexName) && $this->indexManager->exists($this->indexName)) {
-        $this->indexManager->delete($this->indexName);
+    $index = (new Client)->searchableAs();
+    $indexManager = app(IndexManagerInterface::class);
+
+    if ($indexManager->exists($index)) {
+        $indexManager->delete($index);
     }
 
     Schema::dropIfExists('clients');

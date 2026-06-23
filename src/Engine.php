@@ -2,9 +2,9 @@
 
 namespace DirectoryTree\OpenSearchScoutDriver;
 
-use DirectoryTree\OpenSearchAdapter\Documents\DocumentManager;
+use DirectoryTree\OpenSearchAdapter\Documents\DocumentManagerInterface;
 use DirectoryTree\OpenSearchAdapter\Indices\IndexBlueprint;
-use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
+use DirectoryTree\OpenSearchAdapter\Indices\IndexManagerInterface;
 use DirectoryTree\OpenSearchAdapter\Search\Hit;
 use DirectoryTree\OpenSearchAdapter\Search\SearchResponse;
 use DirectoryTree\OpenSearchScoutDriver\Factories\DocumentFactoryInterface;
@@ -28,15 +28,13 @@ class Engine extends ScoutEngine
      * Create a new OpenSearch Scout engine instance.
      */
     public function __construct(
-        protected DocumentManager $documentManager,
+        protected ModelFactoryInterface $modelFactory,
+        protected IndexManagerInterface $indexManager,
+        protected DocumentManagerInterface $documentManager,
         protected DocumentFactoryInterface $documentFactory,
         protected SearchRequestFactoryInterface $searchRequestFactory,
-        protected ModelFactoryInterface $modelFactory,
-        protected IndexManager $indexManager,
         protected bool $refreshDocuments = false,
-    ) {
-        $this->refreshDocuments = (bool) config('opensearch-scout.refresh_documents', $refreshDocuments);
-    }
+    ) {}
 
     /**
      * Update the given models in the index.
@@ -48,6 +46,7 @@ class Engine extends ScoutEngine
         }
 
         $index = $models->first()->searchableAs();
+
         $documents = $this->documentFactory->makeFromModels($models);
 
         $this->documentManager->index($index, $documents->all(), $this->refreshDocuments);
@@ -63,6 +62,7 @@ class Engine extends ScoutEngine
         }
 
         $index = $models->first()->searchableAs();
+
         $documentIds = $models->map(fn (Model $model) => (string) $model->getScoutKey())->all();
 
         $this->documentManager->delete($index, $documentIds, $this->refreshDocuments);
@@ -129,6 +129,7 @@ class Engine extends ScoutEngine
     public function flush($model): void
     {
         $index = $model->searchableAs();
+
         $query = ['match_all' => new stdClass];
 
         $this->documentManager->deleteByQuery($index, $query, $this->refreshDocuments);
