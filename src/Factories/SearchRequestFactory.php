@@ -4,6 +4,7 @@ namespace DirectoryTree\OpenSearchScoutDriver\Factories;
 
 use DirectoryTree\OpenSearchAdapter\Search\SearchRequest as OpenSearchRequest;
 use DirectoryTree\OpenSearchScoutDriver\SearchRequest;
+use Illuminate\Contracts\Support\Arrayable;
 use Laravel\Scout\Builder;
 use stdClass;
 
@@ -19,21 +20,76 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
      */
     public function makeFromBuilder(Builder $builder, array $options = []): SearchRequest
     {
+        if ($compiled = $this->compileBuilder($builder, $options)) {
+            return $this->makeFromCompiled($builder, $compiled);
+        }
+
         $request = new OpenSearchRequest($this->makeQuery($builder));
 
         if ($sort = $this->makeSort($builder)) {
             $request->sort($sort);
         }
 
-        if ($from = $this->makeFrom($options)) {
+        if (! is_null($from = $this->makeFrom($options))) {
             $request->from($from);
         }
 
-        if ($size = $this->makeSize($builder, $options)) {
+        if (! is_null($size = $this->makeSize($builder, $options))) {
             $request->size($size);
         }
 
+        $this->applyOptions($request, $builder->options);
+
         return new SearchRequest($this->makeIndex($builder), $request);
+    }
+
+    /**
+     * Make an OpenSearch request from a compiled builder payload.
+     *
+     * @param  array{query?: array<string, mixed>|null, sort?: array<int|string, mixed>|null, from?: int|null, size?: int|string|null, aggs?: array<string, mixed>|null, aggregations?: array<string, mixed>|null}  $compiled
+     */
+    protected function makeFromCompiled(Builder $builder, array $compiled): SearchRequest
+    {
+        $request = new OpenSearchRequest($compiled['query'] ?? []);
+
+        if (! empty($compiled['sort'])) {
+            $request->sort($compiled['sort']);
+        }
+
+        if (! empty($compiled['from'])) {
+            $request->from((int) $compiled['from']);
+        }
+
+        if (isset($compiled['size']) && is_numeric($compiled['size'])) {
+            $request->size((int) $compiled['size']);
+        }
+
+        if (! empty($compiled['aggs'])) {
+            $request->aggregations($compiled['aggs']);
+        }
+
+        if (! empty($compiled['aggregations'])) {
+            $request->aggregations($compiled['aggregations']);
+        }
+
+        $this->applyOptions($request, $builder->options);
+
+        return new SearchRequest($this->makeIndex($builder), $request);
+    }
+
+    /**
+     * Compile builders that expose their own OpenSearch payload.
+     *
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>|null
+     */
+    protected function compileBuilder(Builder $builder, array $options): ?array
+    {
+        if (! $builder instanceof Arrayable) {
+            return null;
+        }
+
+        return $builder->toArray($options);
     }
 
     /**
@@ -139,6 +195,72 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
      */
     protected function makeSize(Builder $builder, array $options): ?int
     {
-        return $options['perPage'] ?? $builder->limit;
+        $size = $options['perPage'] ?? $builder->limit;
+
+        return is_numeric($size) ? (int) $size : null;
+    }
+
+    /**
+     * Apply Scout builder options to the OpenSearch search request.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    protected function applyOptions(OpenSearchRequest $request, array $options): void
+    {
+        if (isset($options['highlight'])) {
+            $request->highlight($options['highlight']);
+        }
+
+        if (isset($options['rescore'])) {
+            $request->rescore($options['rescore']);
+        }
+
+        if (isset($options['suggest'])) {
+            $request->suggest($options['suggest']);
+        }
+
+        if (isset($options['collapse'])) {
+            $request->collapse($options['collapse']);
+        }
+
+        if (isset($options['aggregations'])) {
+            $request->aggregations($options['aggregations']);
+        }
+
+        if (isset($options['post_filter'])) {
+            $request->postFilter($options['post_filter']);
+        }
+
+        if (isset($options['indices_boost'])) {
+            $request->indicesBoost($options['indices_boost']);
+        }
+
+        if (isset($options['min_score'])) {
+            $request->minScore($options['min_score']);
+        }
+
+        if (isset($options['script_fields'])) {
+            $request->scriptFields($options['script_fields']);
+        }
+
+        if (isset($options['search_type'])) {
+            $request->searchType($options['search_type']);
+        }
+
+        if (isset($options['preference'])) {
+            $request->preference($options['preference']);
+        }
+
+        if (array_key_exists('_source', $options)) {
+            $request->source($options['_source']);
+        }
+
+        if (array_key_exists('track_total_hits', $options)) {
+            $request->trackTotalHits($options['track_total_hits']);
+        }
+
+        if (array_key_exists('track_scores', $options)) {
+            $request->trackScores($options['track_scores']);
+        }
     }
 }
