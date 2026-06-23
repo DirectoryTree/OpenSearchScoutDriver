@@ -8,6 +8,7 @@ use Laravel\Scout\Builder;
 
 it('returns an empty collection for empty search responses', function () {
     $builder = new Builder(new Client, 'john');
+
     $response = new SearchResponse([
         'hits' => [
             'total' => ['value' => 0],

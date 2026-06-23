@@ -4,8 +4,9 @@ namespace DirectoryTree\OpenSearchScoutDriver\Factories;
 
 use DirectoryTree\OpenSearchAdapter\Search\Hit;
 use DirectoryTree\OpenSearchAdapter\Search\SearchResponse;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\LazyCollection;
 use Laravel\Scout\Builder;
 
@@ -17,7 +18,7 @@ class ModelFactory implements ModelFactoryInterface
     /**
      * Create an Eloquent collection from an OpenSearch response.
      */
-    public function makeFromSearchResponse(SearchResponse $searchResponse, Builder $builder): Collection
+    public function makeFromSearchResponse(SearchResponse $searchResponse, Builder $builder): EloquentCollection
     {
         if (! $searchResponse->total()) {
             return $builder->model->newCollection();
@@ -25,7 +26,7 @@ class ModelFactory implements ModelFactoryInterface
 
         $documentIds = $this->pluckDocumentIds($searchResponse);
 
-        /** @var Collection $models */
+        /** @var EloquentCollection $models */
         $models = $builder->model->getScoutModelsByIds($builder, $documentIds);
 
         return $this->sortModels($this->filterModels($models, $documentIds), $documentIds);
@@ -62,32 +63,28 @@ class ModelFactory implements ModelFactoryInterface
     }
 
     /**
-     * Remove models that are no longer present in the database.
-     *
-     * @template T
-     *
-     * @param  T  $models
-     * @param  array<int, string>  $documentIds
-     * @return T
-     */
-    protected function filterModels($models, array $documentIds)
-    {
-        return $models->filter(fn (Model $model) => in_array((string) $model->getScoutKey(), $documentIds, true))->values();
-    }
-
-    /**
      * Sort models into the same order as the OpenSearch response.
      *
-     * @template T
-     *
-     * @param  T  $models
      * @param  array<int, string>  $documentIds
-     * @return T
      */
-    protected function sortModels($models, array $documentIds)
+    protected function sortModels(EloquentCollection|LazyCollection $models, array $documentIds): SupportCollection|EloquentCollection|LazyCollection
     {
         $documentIdPositions = array_flip($documentIds);
 
-        return $models->sortBy(fn (Model $model) => $documentIdPositions[(string) $model->getScoutKey()])->values();
+        return $models->sortBy(
+            fn (Model $model) => $documentIdPositions[(string) $model->getScoutKey()]
+        )->values();
+    }
+
+    /**
+     * Remove models that are no longer present in the database.
+     *
+     * @param  array<int, string>  $documentIds
+     */
+    protected function filterModels(EloquentCollection|LazyCollection $models, array $documentIds): SupportCollection|EloquentCollection|LazyCollection
+    {
+        return $models->filter(
+            fn (Model $model) => in_array((string) $model->getScoutKey(), $documentIds, true)
+        )->values();
     }
 }
