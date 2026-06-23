@@ -1,8 +1,9 @@
 <?php
 
 use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactory;
+use DirectoryTree\OpenSearchScoutDriver\SearchRequestPayload;
+use DirectoryTree\OpenSearchScoutDriver\SearchRequestPayloadInterface;
 use DirectoryTree\OpenSearchScoutDriver\Tests\Fixtures\Client;
-use Illuminate\Contracts\Support\Arrayable;
 use Laravel\Scout\Builder;
 
 it('creates search requests with empty query strings', function () {
@@ -143,28 +144,26 @@ it('creates search requests with opensearch top-level options', function () {
         ->and($request['preference'])->toBe('_local');
 });
 
-it('creates search requests from compiled arrayable builders', function () {
-    $builder = new class(new Client, null) extends Builder implements Arrayable
+it('creates search requests from compiled builders', function () {
+    $builder = new class(new Client, null) extends Builder implements SearchRequestPayloadInterface
     {
         /**
-         * Compile the query into its array form.
+         * Compile the query into a search request payload.
          *
          * @param  array<string, mixed>  $options
-         * @return array<string, mixed>
          */
-        public function toArray(array $options = []): array
+        public function toSearchRequestPayload(array $options = []): SearchRequestPayload
         {
-            return [
-                'query' => [],
-                'sort' => [
+            return new SearchRequestPayload(
+                from: ($options['page'] - 1) * $options['perPage'],
+                size: $options['perPage'],
+                sort: [
                     ['foo' => ['order' => 'desc']],
                 ],
-                'from' => ($options['page'] - 1) * $options['perPage'],
-                'size' => $options['perPage'],
-                'aggs' => [
+                aggregations: [
                     'emails' => ['terms' => ['field' => 'email']],
                 ],
-            ];
+            );
         }
     };
 
@@ -182,6 +181,7 @@ it('creates search requests from compiled arrayable builders', function () {
             'sort' => [
                 ['foo' => ['order' => 'desc']],
             ],
+            'from' => 0,
             'size' => 0,
             'aggregations' => [
                 'emails' => ['terms' => ['field' => 'email']],
