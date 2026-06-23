@@ -1,6 +1,15 @@
-# OpenSearch Scout Driver
+<h1 align="center">OpenSearch Scout Driver</h1>
 
-OpenSearch driver for Laravel Scout.
+<p align="center">An OpenSearch driver for Laravel Scout.</p>
+
+<p align="center">
+<a href="https://github.com/directorytree/opensearch-scout-driver/actions"><img src="https://img.shields.io/github/actions/workflow/status/directorytree/opensearch-scout-driver/run-tests.yml?branch=master&style=flat-square"></a>
+<a href="https://packagist.org/packages/directorytree/opensearch-scout-driver"><img src="https://img.shields.io/packagist/v/directorytree/opensearch-scout-driver.svg?style=flat-square"></a>
+<a href="https://packagist.org/packages/directorytree/opensearch-scout-driver"><img src="https://img.shields.io/packagist/dt/directorytree/opensearch-scout-driver.svg?style=flat-square"></a>
+<a href="https://packagist.org/packages/directorytree/opensearch-scout-driver"><img src="https://img.shields.io/packagist/l/directorytree/opensearch-scout-driver.svg?style=flat-square"></a>
+</p>
+
+---
 
 ## Installation
 
