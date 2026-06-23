@@ -41,7 +41,7 @@ class DocumentFactory implements DocumentFactoryInterface
     /**
      * Assert that the given document source is valid.
      *
-     * @throws \UnexpectedValueException
+     * @throws UnexpectedValueException
      */
     protected function assertValidDocumentSource(Model $model, array $source): void
     {
