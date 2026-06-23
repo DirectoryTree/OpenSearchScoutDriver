@@ -30,8 +30,11 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/opensearch-scout.php', 'opensearch-scout');
 
         $this->app->bind(ModelFactoryInterface::class, ModelFactory::class);
-        $this->app->bind(DocumentFactoryInterface::class, DocumentFactory::class);
         $this->app->bind(SearchRequestFactoryInterface::class, SearchRequestFactory::class);
+
+        $this->app->bind(DocumentFactoryInterface::class, function (Application $app) {
+            return new DocumentFactory($app['config']->get('scout.soft_delete', false));
+        });
 
         $this->app->singleton(DocumentManagerInterface::class, function (Application $app) {
             return new DocumentManager($app->make(OpenSearchManager::class)->default());

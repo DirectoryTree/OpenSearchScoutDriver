@@ -81,7 +81,7 @@ it('filters stale opensearch hits when database records no longer exist', functi
 it('indexes and filters soft deleted models when scout soft deletes are enabled', function (): void {
     config()->set('scout.soft_delete', true);
 
-    $engine = app(EngineManager::class)->engine('opensearch');
+    $engine = app(EngineManager::class)->forgetDrivers()->engine('opensearch');
 
     Client::query()->whereKey(3)->delete();
 

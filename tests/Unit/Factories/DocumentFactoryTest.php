@@ -19,6 +19,20 @@ it('creates documents from models', function () {
         ->and($documents->first()->source())->toBe(['name' => 'John', 'email' => 'john@example.com']);
 });
 
+it('creates documents with soft delete metadata when enabled', function () {
+    $model = new Client(['id' => 1, 'name' => 'John']);
+
+    $model->deleted_at = now();
+
+    $document = (new DocumentFactory(softDelete: true))->makeFromModels(new Collection([$model]))->first();
+
+    expect($document->source())->toBe([
+        '__soft_deleted' => 1,
+        'name' => 'John',
+        'email' => 'john@example.com',
+    ]);
+});
+
 it('rejects restricted document fields', function () {
     $model = new class extends Client
     {

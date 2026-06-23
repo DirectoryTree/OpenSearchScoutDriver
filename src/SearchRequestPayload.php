@@ -99,7 +99,7 @@ class SearchRequestPayload
             'from' => $this->from,
             'size' => $this->size,
             'aggregations' => $this->aggregations,
-        ], fn (mixed $value) => blank($value) === false);
+        ], fn (mixed $value) => filled($value));
     }
 
     /**
