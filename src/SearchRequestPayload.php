@@ -54,6 +54,14 @@ class SearchRequestPayload
     }
 
     /**
+     * Get the maximum number of results.
+     */
+    public function size(): ?int
+    {
+        return $this->size;
+    }
+
+    /**
      * Get the sort definitions.
      *
      * @return array<int|string, mixed>|null
@@ -79,14 +87,6 @@ class SearchRequestPayload
     public function searchAfter(): ?array
     {
         return $this->searchAfter;
-    }
-
-    /**
-     * Get the maximum number of results.
-     */
-    public function size(): ?int
-    {
-        return $this->size;
     }
 
     /**

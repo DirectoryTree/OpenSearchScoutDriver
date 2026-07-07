@@ -126,16 +126,16 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
             $request->source($options['_source']);
         }
 
+        if (array_key_exists('search_after', $options)) {
+            $request->searchAfter($options['search_after']);
+        }
+
         if (array_key_exists('track_scores', $options)) {
             $request->trackScores($options['track_scores']);
         }
 
         if (array_key_exists('track_total_hits', $options)) {
             $request->trackTotalHits($options['track_total_hits']);
-        }
-
-        if (array_key_exists('search_after', $options)) {
-            $request->searchAfter($options['search_after']);
         }
     }
 
