@@ -6,6 +6,7 @@ use DirectoryTree\OpenSearchScoutDriver\Engine;
 use DirectoryTree\OpenSearchScoutDriver\Factories\DocumentFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\ModelFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactoryInterface;
+use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
 
 it('registers the opensearch scout engine', function () {
@@ -18,4 +19,8 @@ it('registers package bindings', function () {
         ->and(app(SearchRequestFactoryInterface::class))->toBeInstanceOf(SearchRequestFactoryInterface::class)
         ->and(app(DocumentManagerInterface::class))->toBeInstanceOf(DocumentManagerInterface::class)
         ->and(app(IndexManagerInterface::class))->toBeInstanceOf(IndexManagerInterface::class);
+});
+
+it('registers the cursor paginate builder macro', function () {
+    expect(Builder::hasMacro('cursorPaginate'))->toBeTrue();
 });
