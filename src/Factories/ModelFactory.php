@@ -20,11 +20,11 @@ class ModelFactory implements ModelFactoryInterface
      */
     public function makeFromSearchResponse(SearchResponse $searchResponse, Builder $builder): EloquentCollection
     {
-        if (! $searchResponse->total()) {
+        $documentIds = $this->pluckDocumentIds($searchResponse);
+
+        if (empty($documentIds)) {
             return $builder->model->newCollection();
         }
-
-        $documentIds = $this->pluckDocumentIds($searchResponse);
 
         /** @var EloquentCollection $models */
         $models = $builder->model->getScoutModelsByIds($builder, $documentIds);
@@ -37,11 +37,11 @@ class ModelFactory implements ModelFactoryInterface
      */
     public function makeLazyFromSearchResponse(SearchResponse $searchResponse, Builder $builder): LazyCollection
     {
-        if (! $searchResponse->total()) {
+        $documentIds = $this->pluckDocumentIds($searchResponse);
+
+        if (empty($documentIds)) {
             return LazyCollection::make($builder->model->newCollection());
         }
-
-        $documentIds = $this->pluckDocumentIds($searchResponse);
 
         /** @var LazyCollection $models */
         $models = $builder->model->queryScoutModelsByIds($builder, $documentIds)->cursor();

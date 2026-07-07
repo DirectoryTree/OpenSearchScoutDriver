@@ -16,7 +16,7 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
     /**
      * Create an OpenSearch request from the given Scout builder.
      *
-     * @param  array{page?: int, perPage?: int}  $options
+     * @param  array{page?: int, perPage?: int, searchAfter?: array<int, mixed>, reversed?: bool}  $options
      */
     public function makeFromBuilder(Builder $builder, array $options = []): SearchRequest
     {
@@ -24,17 +24,21 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
             ? $builder->toSearchRequestPayload($options)
             : SearchRequestPayload::fromBuilder($builder, $options);
 
-        return $this->makeFromPayload($builder, $payload);
+        return $this->makeFromPayload($builder, $payload, $options);
     }
 
     /**
      * Make an OpenSearch request from a builder payload.
      */
-    protected function makeFromPayload(Builder $builder, SearchRequestPayload $payload): SearchRequest
+    protected function makeFromPayload(Builder $builder, SearchRequestPayload $payload, array $options = []): SearchRequest
     {
         $request = new OpenSearchRequest($payload->query());
 
         if ($sort = $payload->sort()) {
+            if ($options['reversed'] ?? false) {
+                $sort = $this->reverseSort($sort);
+            }
+
             $request->sort($sort);
         }
 
@@ -44,6 +48,10 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
 
         if (! is_null($size = $payload->size())) {
             $request->size($size);
+        }
+
+        if ($searchAfter = $payload->searchAfter()) {
+            $request->searchAfter($searchAfter);
         }
 
         if ($aggregations = $payload->aggregations()) {
@@ -125,5 +133,50 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
         if (array_key_exists('track_total_hits', $options)) {
             $request->trackTotalHits($options['track_total_hits']);
         }
+
+        if (array_key_exists('search_after', $options)) {
+            $request->searchAfter($options['search_after']);
+        }
+    }
+
+    /**
+     * Reverse the sort directions for previous cursor pagination.
+     *
+     * @param  array<int|string, mixed>  $sort
+     * @return array<int|string, mixed>
+     */
+    protected function reverseSort(array $sort): array
+    {
+        return array_map(function (mixed $sort): mixed {
+            if (is_string($sort)) {
+                return [$sort => $sort === '_score' ? 'asc' : 'desc'];
+            }
+
+            if (! is_array($sort)) {
+                return $sort;
+            }
+
+            foreach ($sort as $field => $definition) {
+                if (is_string($definition)) {
+                    $sort[$field] = $this->reverseDirection($definition);
+
+                    continue;
+                }
+
+                if (is_array($definition)) {
+                    $sort[$field]['order'] = $this->reverseDirection($definition['order'] ?? 'asc');
+                }
+            }
+
+            return $sort;
+        }, $sort);
+    }
+
+    /**
+     * Reverse an OpenSearch sort direction.
+     */
+    protected function reverseDirection(string $direction): string
+    {
+        return strtolower($direction) === 'asc' ? 'desc' : 'asc';
     }
 }
