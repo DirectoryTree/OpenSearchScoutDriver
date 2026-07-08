@@ -77,6 +77,21 @@ $posts = Post::search('laravel')->get();
 
 The driver converts Scout builders into OpenSearch search requests and uses the configured OpenSearch client connection to index, delete, flush, and search models.
 
+### Cursor Pagination
+
+For deep pagination, use `cursorPaginate` with an explicit, stable sort:
+
+```php
+$posts = Post::search('laravel')
+    ->orderBy('published_at', 'desc')
+    ->orderBy('id', 'desc')
+    ->cursorPaginate(25);
+```
+
+Cursor pagination uses OpenSearch `search_after` values internally and returns Laravel's standard `CursorPaginator` response shape, including `next_cursor` and `prev_cursor`.
+
+OpenSearch only returns reusable `search_after` values for sorted searches, so cursor pagination requires at least one explicit sort. Prefer adding a unique indexed tie-breaker, such as an indexed model key, as the final sort.
+
 ## Credits
 
 This package builds on a lot of the foundation and prior work from [Ivan Babenko](https://github.com/babenkoivan) and his Elasticsearch Laravel ecosystem packages.

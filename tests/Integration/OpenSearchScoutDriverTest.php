@@ -59,6 +59,18 @@ it('indexes searches paginates deletes and flushes models against opensearch', f
         ->and(Client::search('')->whereIn('email', ['john@example.com', 'taylor@example.com'])->get()->pluck('id')->all())->toBe([1, 3])
         ->and(Client::search('')->orderBy('name', 'asc')->paginate(2)->pluck('id')->all())->toBe([2, 1]);
 
+    $page = Client::search('')
+        ->orderBy('email')
+        ->cursorPaginate(2);
+
+    $nextPage = Client::search('')
+        ->orderBy('email')
+        ->cursorPaginate(2, 'cursor', $page->nextCursor());
+
+    expect(collect($page->items())->pluck('id')->all())->toBe([2, 1])
+        ->and($page->nextCursor())->not->toBeNull()
+        ->and(collect($nextPage->items())->pluck('id')->all())->toBe([3]);
+
     $engine->delete(Client::query()->whereKey(1)->get());
 
     expect(Client::search('John')->get())->toHaveCount(0);

@@ -2,6 +2,7 @@
 
 namespace DirectoryTree\OpenSearchScoutDriver;
 
+use BadMethodCallException;
 use DirectoryTree\OpenSearchAdapter\Documents\DocumentManager;
 use DirectoryTree\OpenSearchAdapter\Documents\DocumentManagerInterface;
 use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
@@ -15,6 +16,7 @@ use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactory;
 use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactoryInterface;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Scout\Builder;
 use Laravel\Scout\EngineManager;
 
 /**
@@ -67,6 +69,29 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
 
         $this->app->make(EngineManager::class)->extend('opensearch', function (Application $app) {
             return $app->make(Engine::class);
+        });
+
+        $this->registerBuilderMacros();
+    }
+
+    /**
+     * Register OpenSearch Scout builder macros.
+     */
+    protected function registerBuilderMacros(): void
+    {
+        if (Builder::hasMacro('cursorPaginate')) {
+            return;
+        }
+
+        Builder::macro('cursorPaginate', function ($perPage = null, string $cursorName = 'cursor', $cursor = null) {
+            /** @var Builder $this */
+            $engine = $this->engine();
+
+            if (! $engine instanceof Engine) {
+                throw new BadMethodCallException('Scout cursor pagination is only available for the OpenSearch engine.');
+            }
+
+            return $engine->cursorPaginate($this, $perPage, $cursorName, $cursor)->appends('query', $this->query);
         });
     }
 }

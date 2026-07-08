@@ -16,6 +16,7 @@ class SearchRequestPayload
      * @param  array<string, mixed>  $query
      * @param  array<int|string, mixed>|null  $sort
      * @param  array<string, mixed>|null  $aggregations
+     * @param  array<int, mixed>|null  $searchAfter
      */
     public function __construct(
         protected array $query = [],
@@ -23,12 +24,13 @@ class SearchRequestPayload
         protected ?int $size = null,
         protected ?array $sort = null,
         protected ?array $aggregations = null,
+        protected ?array $searchAfter = null,
     ) {}
 
     /**
      * Create a new search request payload from the given Scout builder.
      *
-     * @param  array{page?: int, perPage?: int}  $options
+     * @param  array{page?: int, perPage?: int, searchAfter?: array<int, mixed>}  $options
      */
     public static function fromBuilder(Builder $builder, array $options = []): self
     {
@@ -37,6 +39,7 @@ class SearchRequestPayload
             from: static::makeFrom($options),
             size: static::makeSize($builder, $options),
             sort: static::makeSort($builder),
+            searchAfter: static::makeSearchAfter($options),
         );
     }
 
@@ -48,6 +51,14 @@ class SearchRequestPayload
     public function query(): array
     {
         return $this->query;
+    }
+
+    /**
+     * Get the maximum number of results.
+     */
+    public function size(): ?int
+    {
+        return $this->size;
     }
 
     /**
@@ -69,11 +80,13 @@ class SearchRequestPayload
     }
 
     /**
-     * Get the maximum number of results.
+     * Get the hit sort values to search after.
+     *
+     * @return array<int, mixed>|null
      */
-    public function size(): ?int
+    public function searchAfter(): ?array
     {
-        return $this->size;
+        return $this->searchAfter;
     }
 
     /**
@@ -98,6 +111,7 @@ class SearchRequestPayload
             'sort' => $this->sort,
             'from' => $this->from,
             'size' => $this->size,
+            'search_after' => $this->searchAfter,
             'aggregations' => $this->aggregations,
         ], fn (mixed $value) => filled($value));
     }
@@ -179,15 +193,30 @@ class SearchRequestPayload
     /**
      * Create the OpenSearch result offset.
      *
-     * @param  array{page?: int, perPage?: int}  $options
+     * @param  array{page?: int, perPage?: int, searchAfter?: array<int, mixed>}  $options
      */
     protected static function makeFrom(array $options): ?int
     {
+        if (isset($options['searchAfter'])) {
+            return null;
+        }
+
         if (isset($options['page'], $options['perPage'])) {
             return ($options['page'] - 1) * $options['perPage'];
         }
 
         return null;
+    }
+
+    /**
+     * Create the OpenSearch search-after values.
+     *
+     * @param  array{searchAfter?: array<int, mixed>}  $options
+     * @return array<int, mixed>|null
+     */
+    protected static function makeSearchAfter(array $options): ?array
+    {
+        return $options['searchAfter'] ?? null;
     }
 
     /**

@@ -36,6 +36,33 @@ it('can be created from scout builders', function () {
     ]);
 });
 
+it('can be created with search after values', function () {
+    $builder = (new Builder(new Client, 'john'))
+        ->orderBy('email')
+        ->orderBy('id');
+
+    $payload = SearchRequestPayload::fromBuilder($builder, [
+        'perPage' => 15,
+        'searchAfter' => ['john@example.com', 1],
+    ]);
+
+    expect($payload->toArray())->toEqual([
+        'query' => [
+            'bool' => [
+                'must' => [
+                    'query_string' => ['query' => 'john'],
+                ],
+            ],
+        ],
+        'sort' => [
+            ['email' => 'asc'],
+            ['id' => 'asc'],
+        ],
+        'size' => 15,
+        'search_after' => ['john@example.com', 1],
+    ]);
+});
+
 it('filters empty payload values when cast to an array', function () {
     $payload = new SearchRequestPayload(
         aggregations: [

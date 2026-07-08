@@ -100,6 +100,47 @@ it('creates search requests with pagination', function () {
         ->and($request->toArray()['body']['size'])->toBe(30);
 });
 
+it('creates search requests with search after', function () {
+    $builder = new Builder(new Client, 'john');
+    $builder->orderBy('email');
+    $builder->orderBy('id');
+
+    $request = (new SearchRequestFactory)->makeFromBuilder($builder, [
+        'perPage' => 30,
+        'searchAfter' => ['john@example.com', 1],
+    ]);
+
+    expect($request->toArray()['body'])->toMatchArray([
+        'sort' => [
+            ['email' => 'asc'],
+            ['id' => 'asc'],
+        ],
+        'size' => 30,
+        'search_after' => ['john@example.com', 1],
+    ])->not->toHaveKey('from');
+});
+
+it('reverses search requests for previous cursor pagination', function () {
+    $builder = new Builder(new Client, 'john');
+    $builder->orderBy('email');
+    $builder->orderBy('name', 'desc');
+
+    $request = (new SearchRequestFactory)->makeFromBuilder($builder, [
+        'perPage' => 30,
+        'searchAfter' => ['john@example.com', 'John'],
+        'reversed' => true,
+    ]);
+
+    expect($request->toArray()['body'])->toMatchArray([
+        'sort' => [
+            ['email' => 'desc'],
+            ['name' => 'asc'],
+        ],
+        'size' => 30,
+        'search_after' => ['john@example.com', 'John'],
+    ]);
+});
+
 it('creates search requests with opensearch body options', function () {
     $builder = (new Builder(new Client, 'john'))->options([
         'highlight' => ['fields' => ['name' => new stdClass]],
@@ -110,6 +151,7 @@ it('creates search requests with opensearch body options', function () {
         'aggregations' => ['emails' => ['terms' => ['field' => 'email']]],
         'post_filter' => ['term' => ['active' => true]],
         'track_total_hits' => true,
+        'search_after' => ['john@example.com', 1],
         'indices_boost' => [['clients' => 1.5]],
         'track_scores' => false,
         'min_score' => 1.25,
@@ -126,6 +168,7 @@ it('creates search requests with opensearch body options', function () {
         ->and($request['body']['aggregations'])->toBe(['emails' => ['terms' => ['field' => 'email']]])
         ->and($request['body']['post_filter'])->toBe(['term' => ['active' => true]])
         ->and($request['body']['track_total_hits'])->toBeTrue()
+        ->and($request['body']['search_after'])->toBe(['john@example.com', 1])
         ->and($request['body']['indices_boost'])->toBe([['clients' => 1.5]])
         ->and($request['body']['track_scores'])->toBeFalse()
         ->and($request['body']['min_score'])->toBe(1.25)

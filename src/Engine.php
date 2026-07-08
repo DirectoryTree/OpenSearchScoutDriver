@@ -10,8 +10,11 @@ use DirectoryTree\OpenSearchAdapter\Search\SearchResponse;
 use DirectoryTree\OpenSearchScoutDriver\Factories\DocumentFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\ModelFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\Cursor;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\LazyCollection;
 use InvalidArgumentException;
@@ -38,6 +41,8 @@ class Engine extends ScoutEngine
 
     /**
      * Update the given models in the index.
+     *
+     * @param  Collection  $models
      */
     public function update($models): void
     {
@@ -54,6 +59,8 @@ class Engine extends ScoutEngine
 
     /**
      * Delete the given models from the index.
+     *
+     * @param  Collection  $models
      */
     public function delete($models): void
     {
@@ -80,6 +87,9 @@ class Engine extends ScoutEngine
 
     /**
      * Perform the given paginated search.
+     *
+     * @param  int  $perPage
+     * @param  int  $page
      */
     public function paginate(Builder $builder, $perPage, $page): SearchResponse
     {
@@ -92,6 +102,46 @@ class Engine extends ScoutEngine
     }
 
     /**
+     * Cursor paginate the given search using OpenSearch search_after values.
+     *
+     * @param  int|null  $perPage
+     * @param  string  $cursorName
+     * @param  Cursor|null  $cursor
+     */
+    public function cursorPaginate(Builder $builder, $perPage = null, $cursorName = 'cursor', $cursor = null): CursorPaginator
+    {
+        $perPage = (int) ($perPage ?: $builder->model->getPerPage());
+
+        $cursor = CursorPaginator::resolveCursor($cursor, $cursorName);
+
+        $searchRequest = $this->searchRequestFactory->makeFromBuilder($builder, [
+            'perPage' => $perPage + 1,
+            'reversed' => $cursor?->pointsToPreviousItems() ?? false,
+            'searchAfter' => $cursor?->parameter(CursorPaginator::SEARCH_AFTER_PARAMETER),
+        ]);
+
+        if (! $searchRequest->request()->hasSort()) {
+            throw new InvalidArgumentException('OpenSearch cursor pagination requires at least one explicit sort.');
+        }
+
+        $response = $builder->applyAfterRawSearchCallback(
+            $this->documentManager->search($searchRequest->indexName(), $searchRequest->request())
+        );
+
+        return new CursorPaginator(
+            $this->map($builder, $response, $builder->model),
+            $perPage,
+            $cursor,
+            [
+                'cursorName' => $cursorName,
+                'path' => Paginator::resolveCurrentPath(),
+                'parameters' => [CursorPaginator::SEARCH_AFTER_PARAMETER],
+                'searchAfter' => $this->searchAfterValuesByDocumentId($response),
+            ],
+        );
+    }
+
+    /**
      * Get the primary keys from the search results.
      */
     public function mapIds($results): BaseCollection
@@ -101,6 +151,9 @@ class Engine extends ScoutEngine
 
     /**
      * Map the search results to models.
+     *
+     * @param  SearchResponse  $results
+     * @param  Model  $model
      */
     public function map(Builder $builder, $results, $model): EloquentCollection
     {
@@ -109,6 +162,9 @@ class Engine extends ScoutEngine
 
     /**
      * Lazily map the search results to models.
+     *
+     * @param  SearchResponse  $results
+     * @param  Model  $model
      */
     public function lazyMap(Builder $builder, $results, $model): LazyCollection
     {
@@ -117,6 +173,8 @@ class Engine extends ScoutEngine
 
     /**
      * Get the total count from the search results.
+     *
+     * @param  SearchResponse  $results
      */
     public function getTotalCount($results): ?int
     {
@@ -124,7 +182,25 @@ class Engine extends ScoutEngine
     }
 
     /**
+     * Get hit sort values keyed by document ID.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    protected function searchAfterValuesByDocumentId(SearchResponse $response): array
+    {
+        $values = [];
+
+        foreach ($response->hits() as $hit) {
+            $values[$hit->document()->id()] = $hit->sort();
+        }
+
+        return $values;
+    }
+
+    /**
      * Remove all model records from the index.
+     *
+     * @param  Model  $model
      */
     public function flush($model): void
     {
@@ -137,6 +213,8 @@ class Engine extends ScoutEngine
 
     /**
      * Create an index.
+     *
+     * @param  string  $name
      */
     public function createIndex($name, array $options = []): void
     {
@@ -149,6 +227,8 @@ class Engine extends ScoutEngine
 
     /**
      * Delete an index.
+     *
+     * @param  string  $name
      */
     public function deleteIndex($name): void
     {
