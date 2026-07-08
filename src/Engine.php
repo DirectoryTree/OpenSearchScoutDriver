@@ -10,6 +10,7 @@ use DirectoryTree\OpenSearchAdapter\Search\SearchResponse;
 use DirectoryTree\OpenSearchScoutDriver\Factories\DocumentFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\ModelFactoryInterface;
 use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Cursor;
@@ -40,6 +41,8 @@ class Engine extends ScoutEngine
 
     /**
      * Update the given models in the index.
+     *
+     * @param  Collection  $models
      */
     public function update($models): void
     {
@@ -56,6 +59,8 @@ class Engine extends ScoutEngine
 
     /**
      * Delete the given models from the index.
+     *
+     * @param  Collection  $models
      */
     public function delete($models): void
     {
@@ -82,6 +87,9 @@ class Engine extends ScoutEngine
 
     /**
      * Perform the given paginated search.
+     *
+     * @param  int  $perPage
+     * @param  int  $page
      */
     public function paginate(Builder $builder, $perPage, $page): SearchResponse
     {
@@ -95,8 +103,12 @@ class Engine extends ScoutEngine
 
     /**
      * Cursor paginate the given search using OpenSearch search_after values.
+     *
+     * @param  int|null  $perPage
+     * @param  string  $cursorName
+     * @param  Cursor|null  $cursor
      */
-    public function cursorPaginate(Builder $builder, $perPage = null, string $cursorName = 'cursor', Cursor|string|null $cursor = null): CursorPaginator
+    public function cursorPaginate(Builder $builder, $perPage = null, $cursorName = 'cursor', $cursor = null): CursorPaginator
     {
         $perPage = (int) ($perPage ?: $builder->model->getPerPage());
 
@@ -137,6 +149,9 @@ class Engine extends ScoutEngine
 
     /**
      * Map the search results to models.
+     *
+     * @param  SearchResponse  $results
+     * @param  Model  $model
      */
     public function map(Builder $builder, $results, $model): EloquentCollection
     {
@@ -145,6 +160,9 @@ class Engine extends ScoutEngine
 
     /**
      * Lazily map the search results to models.
+     *
+     * @param  SearchResponse  $results
+     * @param  Model  $model
      */
     public function lazyMap(Builder $builder, $results, $model): LazyCollection
     {
@@ -153,6 +171,8 @@ class Engine extends ScoutEngine
 
     /**
      * Get the total count from the search results.
+     *
+     * @param  SearchResponse  $results
      */
     public function getTotalCount($results): ?int
     {
@@ -177,6 +197,8 @@ class Engine extends ScoutEngine
 
     /**
      * Remove all model records from the index.
+     *
+     * @param  Model  $model
      */
     public function flush($model): void
     {
@@ -189,6 +211,8 @@ class Engine extends ScoutEngine
 
     /**
      * Create an index.
+     *
+     * @param  string  $name
      */
     public function createIndex($name, array $options = []): void
     {
@@ -201,6 +225,8 @@ class Engine extends ScoutEngine
 
     /**
      * Delete an index.
+     *
+     * @param  string  $name
      */
     public function deleteIndex($name): void
     {
