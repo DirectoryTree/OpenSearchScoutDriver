@@ -158,13 +158,13 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
 
             foreach ($sort as $field => $definition) {
                 if (is_string($definition)) {
-                    $sort[$field] = $this->reverseDirection($definition);
+                    $sort[$field] = $this->reverseSortDirection($definition);
 
                     continue;
                 }
 
                 if (is_array($definition)) {
-                    $sort[$field]['order'] = $this->reverseDirection($definition['order'] ?? 'asc');
+                    $sort[$field]['order'] = $this->reverseSortDirection($definition['order'] ?? 'asc');
                 }
             }
 
@@ -175,7 +175,7 @@ class SearchRequestFactory implements SearchRequestFactoryInterface
     /**
      * Reverse an OpenSearch sort direction.
      */
-    protected function reverseDirection(string $direction): string
+    protected function reverseSortDirection(string $direction): string
     {
         return strtolower($direction) === 'asc' ? 'desc' : 'asc';
     }
