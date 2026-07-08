@@ -4,6 +4,7 @@ namespace DirectoryTree\OpenSearchScoutDriver;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Pagination\Cursor;
 use Illuminate\Pagination\CursorPaginator as BaseCursorPaginator;
 use UnexpectedValueException;
 
@@ -18,6 +19,22 @@ class CursorPaginator extends BaseCursorPaginator
      * @param  array<string, array<int, mixed>>  $searchAfter
      */
     protected array $searchAfter = [];
+
+    /**
+     * Resolve the cursor from the current request or explicit value.
+     */
+    public static function resolveCursor(Cursor|string|null $cursor, string $cursorName = 'cursor'): ?Cursor
+    {
+        if ($cursor instanceof Cursor) {
+            return $cursor;
+        }
+
+        if (is_string($cursor)) {
+            return Cursor::fromEncoded($cursor);
+        }
+
+        return BaseCursorPaginator::resolveCurrentCursor($cursorName);
+    }
 
     /**
      * Get the cursor parameters for a given item.

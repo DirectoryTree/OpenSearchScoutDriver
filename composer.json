@@ -28,7 +28,7 @@
   },
   "require": {
     "php": "^8.2",
-    "directorytree/opensearch-adapter": "^1.0.3",
+    "directorytree/opensearch-adapter": "^1.0.4",
     "directorytree/opensearch-client": "^1.0",
     "laravel/scout": "^10.0|^11.0|^12.0|^13.0"
   },

@@ -13,7 +13,6 @@ use DirectoryTree\OpenSearchScoutDriver\Factories\SearchRequestFactoryInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Cursor;
-use Illuminate\Pagination\CursorPaginator as IlluminateCursorPaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\LazyCollection;
@@ -101,7 +100,7 @@ class Engine extends ScoutEngine
     {
         $perPage = (int) ($perPage ?: $builder->model->getPerPage());
 
-        $cursor = $this->resolveCursor($cursor, $cursorName);
+        $cursor = CursorPaginator::resolveCursor($cursor, $cursorName);
 
         $searchRequest = $this->searchRequestFactory->makeFromBuilder($builder, [
             'perPage' => $perPage + 1,
@@ -109,7 +108,7 @@ class Engine extends ScoutEngine
             'searchAfter' => $cursor?->parameter(CursorPaginator::SEARCH_AFTER_PARAMETER),
         ]);
 
-        if (empty($searchRequest->request()->toArray()['body']['sort'] ?? [])) {
+        if (! $searchRequest->request()->hasSort()) {
             throw new InvalidArgumentException('OpenSearch cursor pagination requires at least one explicit sort.');
         }
 
@@ -158,22 +157,6 @@ class Engine extends ScoutEngine
     public function getTotalCount($results): ?int
     {
         return $results->total();
-    }
-
-    /**
-     * Resolve the cursor from the current request or explicit value.
-     */
-    protected function resolveCursor(Cursor|string|null $cursor, string $cursorName): ?Cursor
-    {
-        if ($cursor instanceof Cursor) {
-            return $cursor;
-        }
-
-        if (is_string($cursor)) {
-            return Cursor::fromEncoded($cursor);
-        }
-
-        return IlluminateCursorPaginator::resolveCurrentCursor($cursorName);
     }
 
     /**
