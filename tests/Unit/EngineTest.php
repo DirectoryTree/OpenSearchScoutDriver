@@ -256,6 +256,61 @@ it('cursor paginates previous pages by reversing sort directions', function () {
     $documentManager->assertSearched('clients', $request);
 });
 
+it('applies raw result callbacks when cursor paginating', function () {
+    $response = SearchResponse::fake([
+        Hit::fake(['name' => 'John'], index: 'clients', id: '1', attributes: ['sort' => ['john@example.com', '1']]),
+        Hit::fake(['name' => 'Jane'], index: 'clients', id: '2', attributes: ['sort' => ['jane@example.com', '2']]),
+        Hit::fake(['name' => 'Taylor'], index: 'clients', id: '3', attributes: ['sort' => ['taylor@example.com', '3']]),
+    ], 'clients');
+
+    $callbackResponse = SearchResponse::fake([
+        Hit::fake(['name' => 'Adam'], index: 'clients', id: '4', attributes: ['sort' => ['adam@example.com', '4']]),
+        Hit::fake(['name' => 'Erin'], index: 'clients', id: '5', attributes: ['sort' => ['erin@example.com', '5']]),
+        Hit::fake(['name' => 'Zoe'], index: 'clients', id: '6', attributes: ['sort' => ['zoe@example.com', '6']]),
+    ], 'clients');
+
+    $documentManager = new FakeDocumentManager($response);
+
+    $modelFactory = new class implements ModelFactoryInterface
+    {
+        public function makeFromSearchResponse(SearchResponse $searchResponse, Builder $builder): Collection
+        {
+            return $builder->model->newCollection(array_map(
+                fn (Hit $hit) => new Client(['id' => (int) $hit->document()->id()]),
+                $searchResponse->hits(),
+            ));
+        }
+
+        public function makeLazyFromSearchResponse(SearchResponse $searchResponse, Builder $builder): LazyCollection
+        {
+            return LazyCollection::make($this->makeFromSearchResponse($searchResponse, $builder));
+        }
+    };
+
+    $engine = new Engine(
+        $modelFactory,
+        new FakeIndexManager,
+        $documentManager,
+        new DocumentFactory,
+        new SearchRequestFactory,
+        true,
+    );
+
+    $builder = Client::search('')
+        ->orderBy('email')
+        ->orderBy('id')
+        ->withRawResults(function (SearchResponse $results) use ($callbackResponse) {
+            expect($results->hits()[0]->document()->id())->toBe('1');
+
+            return $callbackResponse;
+        });
+
+    $paginator = $engine->cursorPaginate($builder, 2);
+
+    expect(collect($paginator->items())->pluck('id')->all())->toBe([4, 5])
+        ->and($paginator->nextCursor()?->parameter(CursorPaginator::SEARCH_AFTER_PARAMETER))->toBe(['erin@example.com', '5']);
+});
+
 it('requires an explicit sort for cursor pagination', function () {
     $engine = new Engine(
         new ModelFactory,
