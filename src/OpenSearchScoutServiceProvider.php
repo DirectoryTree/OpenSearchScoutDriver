@@ -91,7 +91,7 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
                 throw new BadMethodCallException('Scout cursor pagination is only available for the OpenSearch engine.');
             }
 
-            return $engine->cursorPaginate($this, $perPage, $cursorName, $cursor);
+            return $engine->cursorPaginate($this, $perPage, $cursorName, $cursor)->appends('query', $this->query);
         });
     }
 }

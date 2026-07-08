@@ -124,7 +124,9 @@ class Engine extends ScoutEngine
             throw new InvalidArgumentException('OpenSearch cursor pagination requires at least one explicit sort.');
         }
 
-        $response = $this->documentManager->search($searchRequest->indexName(), $searchRequest->request());
+        $response = $builder->applyAfterRawSearchCallback(
+            $this->documentManager->search($searchRequest->indexName(), $searchRequest->request())
+        );
 
         return new CursorPaginator(
             $this->map($builder, $response, $builder->model),
