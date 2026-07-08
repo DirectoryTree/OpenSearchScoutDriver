@@ -33,7 +33,7 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
         $this->app->bind(SearchRequestFactoryInterface::class, SearchRequestFactory::class);
 
         $this->app->bind(DocumentFactoryInterface::class, function (Application $app) {
-            return new DocumentFactory($app['config']->get('scout.soft_delete', false));
+            return new DocumentFactory($app->make('config')->get('scout.soft_delete', false));
         });
 
         $this->app->singleton(DocumentManagerInterface::class, function (Application $app) {
@@ -51,7 +51,7 @@ class OpenSearchScoutServiceProvider extends ServiceProvider
                 $app->make(DocumentManagerInterface::class),
                 $app->make(DocumentFactoryInterface::class),
                 $app->make(SearchRequestFactoryInterface::class),
-                $app['config']->get('opensearch-scout.refresh_documents', false),
+                $app->make('config')->get('opensearch-scout.refresh_documents', false),
             );
         });
     }
